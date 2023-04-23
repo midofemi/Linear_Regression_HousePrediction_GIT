@@ -4,10 +4,14 @@ from housing.entity.config_entity import DataValidationConfig
 from housing.entity.artifact_entity import DataIngestionArtifact,DataValidationArtifact
 import os,sys
 import pandas  as pd
-from evidently.model_profile import Profile
-from evidently.model_profile.sections import DataDriftProfileSection
-from evidently.dashboard import Dashboard 
-from evidently.dashboard.tabs import DataDriftTab 
+#from evidently.model_profile import Profile
+#from evidently.model_profile.sections import DataDriftProfileSection
+from evidently.report import Report
+from evidently.metrics.base_metric import generate_column_metrics
+from evidently.metric_preset import DataDriftPreset, TargetDriftPreset
+
+#from evidently.dashboard import Dashboard 
+#from evidently.dashboard.tabs import DataDriftTab 
 import json
 
 class DataValidation:
@@ -71,11 +75,13 @@ class DataValidation:
 
     def get_and_save_data_drift_report(self):
         try:
-            profile = Profile(sections=[DataDriftProfileSection()]) 
+            profile = Report(metrics=[DataDriftPreset()]) 
 
             train_df,test_df = self.get_train_and_test_df() 
 
-            profile.calculate(train_df,test_df) 
+            profile.run(reference_data=train_df, current_data=test_df)
+
+            #profile.calculate(train_df,test_df) 
 
             report = json.loads(profile.json()) 
 
@@ -91,15 +97,23 @@ class DataValidation:
 
     def save_data_drift_report_page(self):
         try:
-            dashboard = Dashboard(tabs=[DataDriftTab()])
-            train_df,test_df = self.get_train_and_test_df()
-            dashboard.calculate(train_df,test_df)
+            #dashboard = Dashboard(tabs=[DataDriftTab()])
+            #train_df,test_df = self.get_train_and_test_df()
+            #dashboard.calculate(train_df,test_df)
+            profile = Report(metrics=[DataDriftPreset()]) 
+
+            train_df,test_df = self.get_train_and_test_df() 
+
+            profile.run(reference_data=train_df, current_data=test_df)
 
             report_page_file_path = self.data_validation_config.report_page_file_path
             report_page_dir = os.path.dirname(report_page_file_path) 
             os.makedirs(report_page_dir,exist_ok=True)
 
-            dashboard.save(report_page_file_path)
+            #dashboard.save(report_page_file_path)
+            profile.save_html(report_page_file_path)
+            #profile.save(report_page_file_path)
+
         except Exception as e:
             raise HousingException(e,sys) from e
 
