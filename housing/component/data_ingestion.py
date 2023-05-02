@@ -56,6 +56,7 @@ class DataIngestion:
             raise HousingException(e,sys) from e
     
     def split_data_as_train_test(self) -> DataIngestionArtifact: 
+
         try:
             raw_data_dir = self.data_ingestion_config.raw_data_dir 
 
@@ -63,9 +64,10 @@ class DataIngestion:
 
             housing_file_path = os.path.join(raw_data_dir,file_name) 
 
+
             logging.info(f"Reading csv file: [{housing_file_path}]")
             housing_data_frame = pd.read_csv(housing_file_path) 
-
+            
             housing_data_frame["income_cat"] = pd.cut(
                 housing_data_frame["median_income"],
                 bins=[0.0, 1.5, 3.0, 4.5, 6.0, np.inf],
@@ -76,8 +78,9 @@ class DataIngestion:
             logging.info(f"Splitting data into train and test")
             strat_train_set = None
             strat_test_set = None
-
+            
             split = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
+
             for train_index,test_index in split.split(housing_data_frame, housing_data_frame["income_cat"]):
                 strat_train_set = housing_data_frame.loc[train_index].drop(["income_cat"],axis=1)
                 strat_test_set = housing_data_frame.loc[test_index].drop(["income_cat"],axis=1)
@@ -87,6 +90,7 @@ class DataIngestion:
 
             test_file_path = os.path.join(self.data_ingestion_config.ingested_test_dir,
                                         file_name)
+            
 
             if strat_train_set is not None:
                 os.makedirs(self.data_ingestion_config.ingested_train_dir,exist_ok=True)
@@ -117,6 +121,8 @@ class DataIngestion:
         except Exception as e:
             raise HousingException(e,sys) from e
     
+
+
     def __del__(self):
         logging.info(f"{'>>'*20}Data Ingestion log completed.{'<<'*20} \n\n")
 
