@@ -55,7 +55,7 @@ def render_artifact_dir(req_path):
                 return content
         return send_file(abs_path)
 
-    # Show directory contents
+    # Sw directory contents
     files = {os.path.join(abs_path, file_name): file_name for file_name in os.listdir(abs_path) if
              "artifact" in os.path.join(abs_path, file_name)}
 
